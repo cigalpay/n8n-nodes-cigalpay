@@ -1,0 +1,46 @@
+# Pushing a tag vX.Y.Z tests the package, publishes it to npm (with provenance)
+# and creates the GitHub release. Needs the NPM_TOKEN repository secret.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Check the tag matches the package version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          version=$(node -p "require('./package.json').version")
+          echo "tag=$tag version=$version"
+          [ "$tag" = "$version" ] || { echo "::error::Tag v$tag doesn't match version $version in package.json"; exit 1; }
+
+      - run: npm ci
+      - run: npm test
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes=$(awk -v v="${GITHUB_REF_NAME#v}" '$0 == "## " v {on=1; next} /^## / {on=0} on && NF' CHANGELOG.md)
+          gh release create "$GITHUB_REF_NAME" \
+            --title "${GITHUB_REF_NAME#v}" \
+            --notes "${notes:-Release ${GITHUB_REF_NAME#v}.}"

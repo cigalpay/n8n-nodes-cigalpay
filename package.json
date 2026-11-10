@@ -1,0 +1,31 @@
+{
+  "name": "n8n-nodes-cigalpay",
+  "version": "1.0.0",
+  "description": "n8n nodes for CigalPay: create crypto checkouts, read payments, refund, and trigger workflows from signed payment notifications.",
+  "keywords": ["n8n-community-node-package", "cigalpay", "crypto", "payments", "bitcoin", "usdt"],
+  "license": "MIT",
+  "homepage": "https://cigalpay.com/developers",
+  "author": { "name": "CigalPay", "email": "support@cigalpay.com" },
+  "repository": { "type": "git", "url": "git+https://github.com/cigalpay/n8n-nodes-cigalpay.git" },
+  "engines": { "node": ">=20" },
+  "main": "index.js",
+  "scripts": {
+    "build": "rm -rf dist && tsc && cp nodes/CigalPay/*.png dist/nodes/CigalPay/",
+    "lint": "tsc --noEmit",
+    "test": "npm run build && node --test test/*.test.js"
+  },
+  "files": ["dist"],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": ["dist/credentials/CigalPayApi.credentials.js"],
+    "nodes": ["dist/nodes/CigalPay/CigalPay.node.js", "dist/nodes/CigalPay/CigalPayTrigger.node.js"]
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "n8n-workflow": "*",
+    "typescript": "~5.6.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}
