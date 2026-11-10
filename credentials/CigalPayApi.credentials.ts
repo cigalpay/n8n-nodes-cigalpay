@@ -1,10 +1,12 @@
-import type { IAuthenticateGeneric, ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
+import type { IAuthenticateGeneric, ICredentialTestRequest, ICredentialType, Icon, INodeProperties } from 'n8n-workflow';
 
 /** CigalPay dashboard → Settings → API credentials. */
 export class CigalPayApi implements ICredentialType {
 	name = 'cigalPayApi';
 
 	displayName = 'CigalPay API';
+
+	icon: Icon = { light: 'file:../icons/cigalpay.svg', dark: 'file:../icons/cigalpay.dark.svg' };
 
 	documentationUrl = 'https://cigalpay.com/developers';
 

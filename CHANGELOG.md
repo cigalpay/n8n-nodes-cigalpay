@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.0
+- Ready for n8n verification: built and linted with n8n's official node CLI (`n8n-node build` / `n8n-node lint`), SVG icons with light and dark variants, node metadata files (Finance & Accounting).
+- Options listed alphabetically.
+- Errors are always reported as n8n node errors, with the item they came from.
+
 ## 1.0.1
 - Published from GitHub Actions through npm Trusted Publishing, with provenance. No change to the nodes.
 

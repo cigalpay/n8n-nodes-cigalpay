@@ -21,7 +21,7 @@ export class CigalPay implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'CigalPay',
 		name: 'cigalPay',
-		icon: 'file:cigalpay.png',
+		icon: { light: 'file:../../icons/cigalpay.svg', dark: 'file:../../icons/cigalpay.dark.svg' },
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
@@ -78,8 +78,8 @@ export class CigalPay implements INodeType {
 				name: 'currency',
 				type: 'options',
 				options: [
-					{ name: 'USD', value: 'USD' },
 					{ name: 'EUR', value: 'EUR' },
+					{ name: 'USD', value: 'USD' },
 				],
 				default: 'USD',
 				displayOptions: { show: { resource: ['checkout'], operation: ['create'] } },
@@ -147,16 +147,16 @@ export class CigalPay implements INodeType {
 				options: [
 					{ name: 'Get', value: 'get', action: 'Get a payment', description: 'Get a payment by its ID' },
 					{
-						name: 'Get by Order',
-						value: 'getByOrder',
-						action: 'Get the payments of an order',
-						description: 'Every payment created for one of your order references',
-					},
-					{
 						name: 'Get Active',
 						value: 'getActive',
 						action: 'Get active payments',
 						description: 'Payments still waiting for funds',
+					},
+					{
+						name: 'Get by Order',
+						value: 'getByOrder',
+						action: 'Get the payments of an order',
+						description: 'Every payment created for one of your order references',
 					},
 				],
 				default: 'get',
@@ -194,7 +194,7 @@ export class CigalPay implements INodeType {
 						description:
 							'Refund a paid payment in the coin the customer paid. The customer gets a link to enter their address.',
 					},
-					{ name: 'Get Many', value: 'getAll', action: 'Get the refunds of a payment' },
+					{ name: 'Get Many', value: 'getAll', action: 'Get many refunds of a payment' },
 				],
 				default: 'create',
 			},
@@ -279,7 +279,8 @@ export class CigalPay implements INodeType {
 					out.push({ json: { error: (error as Error).message }, pairedItem: { item: i } });
 					continue;
 				}
-				throw error;
+				// Returns NodeOperationErrors as they are and keeps a NodeApiError's messages.
+				throw new NodeOperationError(this.getNode(), error as Error, { itemIndex: i });
 			}
 		}
 		return [out];

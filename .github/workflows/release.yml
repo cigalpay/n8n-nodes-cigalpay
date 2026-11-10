@@ -34,6 +34,7 @@ jobs:
           [ "$tag" = "$version" ] || { echo "::error::Tag v$tag doesn't match version $version in package.json"; exit 1; }
 
       - run: npm ci
+      - run: npm run lint
       - run: npm test
 
       - name: Stage on npm (approve on npmjs.com to publish)

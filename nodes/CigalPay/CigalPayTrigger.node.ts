@@ -1,5 +1,12 @@
 import { createHmac, timingSafeEqual } from 'crypto';
-import type { IDataObject, INodeType, INodeTypeDescription, IWebhookFunctions, IWebhookResponseData } from 'n8n-workflow';
+import type {
+	IDataObject,
+	IHookFunctions,
+	INodeType,
+	INodeTypeDescription,
+	IWebhookFunctions,
+	IWebhookResponseData,
+} from 'n8n-workflow';
 import { NodeConnectionTypes } from 'n8n-workflow';
 
 const PAID = ['CONFIRMED', 'FINISHED'];
@@ -20,7 +27,7 @@ export class CigalPayTrigger implements INodeType {
 	description: INodeTypeDescription = {
 		displayName: 'CigalPay Trigger',
 		name: 'cigalPayTrigger',
-		icon: 'file:cigalpay.png',
+		icon: { light: 'file:../../icons/cigalpay.svg', dark: 'file:../../icons/cigalpay.dark.svg' },
 		group: ['trigger'],
 		version: 1,
 		subtitle: '={{$parameter["statuses"] === "paid" ? "Paid payments" : "Payment updates"}}',
@@ -51,8 +58,8 @@ export class CigalPayTrigger implements INodeType {
 				name: 'statuses',
 				type: 'options',
 				options: [
+					{ name: 'All Status Changes', value: 'all', description: 'Waiting, confirming, partly paid, expired, paid' },
 					{ name: 'Paid Payments Only', value: 'paid', description: 'Status CONFIRMED or FINISHED: safe to deliver' },
-					{ name: 'All Status Changes', value: 'all', description: 'Waiting, confirming, partly paid, expired, paid...' },
 					{ name: 'Selected Statuses', value: 'selected' },
 				],
 				default: 'paid',
@@ -82,6 +89,22 @@ export class CigalPayTrigger implements INodeType {
 				description: 'Whether to skip the samples sent by Settings → API credentials → Test notification in the CigalPay dashboard',
 			},
 		],
+	};
+
+	// CigalPay has no webhook registry: the notification URL is given with each
+	// checkout (CigalPay node or API), so there is nothing to create or delete.
+	webhookMethods = {
+		default: {
+			async checkExists(this: IHookFunctions): Promise<boolean> {
+				return true;
+			},
+			async create(this: IHookFunctions): Promise<boolean> {
+				return true;
+			},
+			async delete(this: IHookFunctions): Promise<boolean> {
+				return true;
+			},
+		},
 	};
 
 	async webhook(this: IWebhookFunctions): Promise<IWebhookResponseData> {
