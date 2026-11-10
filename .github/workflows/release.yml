@@ -1,5 +1,7 @@
 # Pushing a tag vX.Y.Z tests the package, publishes it to npm (with provenance)
-# and creates the GitHub release. Needs the NPM_TOKEN repository secret.
+# and creates the GitHub release. First release: NPM_TOKEN repository secret.
+# After it, set up Trusted Publishing on npmjs.com (package Settings -> Trusted
+# Publisher -> GitHub Actions, workflow release.yml) and delete NPM_TOKEN.
 name: Release
 
 on:
@@ -20,6 +22,9 @@ jobs:
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
+
+      # npm Trusted Publishing (no token) needs npm 11.5+; Node 22 ships npm 10.
+      - run: npm install -g npm@11
 
       - name: Check the tag matches the package version
         run: |
