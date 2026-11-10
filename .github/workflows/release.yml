@@ -1,7 +1,7 @@
-# Pushing a tag vX.Y.Z tests the package, publishes it to npm (with provenance)
-# and creates the GitHub release. First release: NPM_TOKEN repository secret.
-# After it, set up Trusted Publishing on npmjs.com (package Settings -> Trusted
-# Publisher -> GitHub Actions, workflow release.yml) and delete NPM_TOKEN.
+# Pushing a tag vX.Y.Z tests the package, stages it on npm through Trusted
+# Publishing (no token; provenance added by npm) and creates the GitHub release.
+# The version goes live only once a maintainer approves it with 2FA on
+# npmjs.com -> Staged Packages (or `npm stage approve <stage-id>`).
 name: Release
 
 on:
@@ -23,7 +23,7 @@ jobs:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
-      # npm Trusted Publishing (no token) needs npm 11.5+; Node 22 ships npm 10.
+      # Staged publishing needs npm 11.15+; Node 22 ships npm 10.
       - run: npm install -g npm@11
 
       - name: Check the tag matches the package version
@@ -36,10 +36,8 @@ jobs:
       - run: npm ci
       - run: npm test
 
-      - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: npm publish --provenance --access public
+      - name: Stage on npm (approve on npmjs.com to publish)
+        run: npm stage publish --provenance --access public
 
       - name: Publish the release
         env:
