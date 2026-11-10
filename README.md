@@ -51,10 +51,16 @@ Anyone can create a checkout with your Account ID and an order reference. Before
 - `checkoutAmount` and `checkoutCurrency` are the price you set,
 - `isPaid` is `true`.
 
-## Example: send the payment link, deliver when paid
+## Example workflow: sell digital products for crypto
 
-1. **Your trigger** (form, shop webhook, Telegram...) → **CigalPay: Create Checkout** → send `chargeLink` to the customer.
-2. **CigalPay Trigger** (paid only) → **IF** `checkoutAmount` equals the order price → deliver, email the receipt, update your sheet or CRM.
+[`examples/sell-digital-product-crypto.json`](examples/sell-digital-product-crypto.json): download it, then in n8n open a new workflow and paste it (or **⋯ → Import from File**).
+
+![Sell digital products for crypto](examples/sell-digital-product-crypto.png)
+
+1. **Take the order:** an n8n form creates a CigalPay checkout for the chosen product, saves the order in a Data Table and sends the customer to the payment page.
+2. **Deliver once paid:** the CigalPay Trigger finds the order, checks the checkout ID, currency and amount, emails the download link once and marks the order delivered. Anything that doesn't match is sent to you instead.
+
+Setup steps are in the yellow note on the canvas.
 
 ## Limits
 

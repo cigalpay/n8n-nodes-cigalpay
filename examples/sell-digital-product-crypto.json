@@ -1,0 +1,836 @@
+{
+  "name": "Sell digital products for crypto with an n8n form and CigalPay",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Buy with crypto",
+        "formDescription": "Pay in BTC, ETH, USDT and more. Your download link arrives by email once the payment is confirmed.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Email",
+              "fieldType": "email",
+              "placeholder": "you@example.com",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Product",
+              "fieldType": "dropdown",
+              "requiredField": true,
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "E-book: Crypto for creators"
+                  },
+                  {
+                    "option": "Video course: Automate your shop"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "responseMode": "lastNode",
+        "options": {
+          "buttonLabel": "Continue to payment",
+          "path": "buy"
+        }
+      },
+      "id": "749dfd1b-77ed-5aaa-b929-f773271efa34",
+      "name": "Order form",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "9f562f48-c2ac-51d5-ba65-11f17d2ce54e"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1a407b7-7461-55ae-aabc-cbf13c48489a",
+              "name": "products",
+              "value": "{\n  \"E-book: Crypto for creators\": {\n    \"price\": 19,\n    \"currency\": \"EUR\",\n    \"downloadUrl\": \"https://example.com/downloads/REPLACE-ebook\"\n  },\n  \"Video course: Automate your shop\": {\n    \"price\": 49,\n    \"currency\": \"USD\",\n    \"downloadUrl\": \"https://example.com/downloads/REPLACE-course\"\n  }\n}",
+              "type": "object"
+            },
+            {
+              "id": "7a0d4e02-e16a-5535-a06f-df2dc501c86f",
+              "name": "returnUrl",
+              "value": "https://example.com/thank-you",
+              "type": "string"
+            },
+            {
+              "id": "65e69461-3ddc-5000-a492-689166fd99be",
+              "name": "notificationUrl",
+              "value": "PASTE_THE_CIGALPAY_TRIGGER_PRODUCTION_URL",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "1f3b35a4-479f-5791-bb3a-7fd99d0695d1",
+      "name": "Set your products and URLs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "283e9d24-9d7a-57a5-9b94-b5a079be2ada",
+              "name": "orderId",
+              "value": "={{ 'order-' + $execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "60b7aeee-0c89-593c-afb5-7f89c5a04828",
+              "name": "email",
+              "value": "={{ $json.Email }}",
+              "type": "string"
+            },
+            {
+              "id": "cbfd30f3-a119-52d2-8b8c-1cf2e87cf0e0",
+              "name": "product",
+              "value": "={{ $json.Product }}",
+              "type": "string"
+            },
+            {
+              "id": "0fdc90b4-255a-5e28-9ddc-90356d7e76fd",
+              "name": "price",
+              "value": "={{ $json.products[$json.Product].price }}",
+              "type": "number"
+            },
+            {
+              "id": "a6203092-881d-5aa0-a391-5fdbff2e4079",
+              "name": "currency",
+              "value": "={{ $json.products[$json.Product].currency }}",
+              "type": "string"
+            },
+            {
+              "id": "5a3e16ec-4ca3-506f-aff8-d8a0ee34b6f7",
+              "name": "downloadUrl",
+              "value": "={{ $json.products[$json.Product].downloadUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "7a0d4e02-e16a-5535-a06f-df2dc501c86f",
+              "name": "returnUrl",
+              "value": "={{ $json.returnUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "65e69461-3ddc-5000-a492-689166fd99be",
+              "name": "notificationUrl",
+              "value": "={{ $json.notificationUrl }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f5646e30-bca7-5187-bd3a-2423f19e9ab7",
+      "name": "Build the order",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "checkout",
+        "operation": "create",
+        "amount": "={{ $json.price }}",
+        "currency": "={{ $json.currency }}",
+        "orderId": "={{ $json.orderId }}",
+        "checkoutDescription": "={{ $json.product }}",
+        "returnUrl": "={{ $json.returnUrl }}",
+        "notifyUrl": "={{ $json.notificationUrl }}",
+        "lang": "en"
+      },
+      "id": "ee07cb60-1137-5943-9930-fd1a8e3851c8",
+      "name": "Create the checkout",
+      "type": "n8n-nodes-cigalpay.cigalPay",
+      "typeVersion": 1,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "cigalpay_orders"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "orderId": "={{ $('Build the order').item.json.orderId }}",
+            "email": "={{ $('Build the order').item.json.email }}",
+            "product": "={{ $('Build the order').item.json.product }}",
+            "price": "={{ $('Build the order').item.json.price }}",
+            "currency": "={{ $('Build the order').item.json.currency }}",
+            "checkoutId": "={{ $json.id }}",
+            "downloadUrl": "={{ $('Build the order').item.json.downloadUrl }}",
+            "status": "pending"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "orderId",
+              "displayName": "orderId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "product",
+              "displayName": "product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "checkoutId",
+              "displayName": "checkoutId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "downloadUrl",
+              "displayName": "downloadUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "54d1366d-7518-53f8-a090-9c0ed2699121",
+      "name": "Save the order",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "redirect",
+        "redirectUrl": "={{ $('Create the checkout').item.json.chargeLink }}"
+      },
+      "id": "2d093469-5b72-5c45-8f2f-9d4b1d675a9b",
+      "name": "Go to the payment page",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.3,
+      "position": [
+        1100,
+        0
+      ],
+      "webhookId": "00926b82-d64b-5ff4-826b-9a144b7aca4f"
+    },
+    {
+      "parameters": {
+        "statuses": "paid",
+        "ignoreTests": true
+      },
+      "id": "3cefe3c1-8f7d-5421-8bb1-5e3719eebda5",
+      "name": "CigalPay Trigger",
+      "type": "n8n-nodes-cigalpay.cigalPayTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        520
+      ],
+      "webhookId": "14052cbe-7d43-51e2-a733-9ed2f3670d45"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b3c80611-16b4-52ed-a4e9-dd7c94230082",
+              "name": "fromEmail",
+              "value": "Your Shop <shop@example.com>",
+              "type": "string"
+            },
+            {
+              "id": "5b037acf-4ca1-554c-8e82-e795087fcd2b",
+              "name": "ownerEmail",
+              "value": "you@example.com",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "36bec0b0-9791-51b0-b818-8d10fd06f0b7",
+      "name": "Set your shop emails",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "cigalpay_orders"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "orderId",
+              "condition": "eq",
+              "keyValue": "={{ $('CigalPay Trigger').item.json.extraId }}"
+            }
+          ]
+        },
+        "limit": 1
+      },
+      "id": "03d723b0-83da-5a92-8db6-137e890c0385",
+      "name": "Find the order",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        520
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "12164e80-0c62-563c-9c25-07e50809db97",
+              "leftValue": "={{ $json.status }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "pending"
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "f2cbf199-dd90-5036-9de7-477d867a6d46",
+      "name": "Order waiting for payment?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        520
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "420e1d32-b7f4-5c89-a460-ec649e83a5b0",
+      "name": "Already delivered or not our order",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b4b8db0c-78a6-501d-86ad-0e84625619c9",
+              "leftValue": "={{ $('CigalPay Trigger').item.json.checkoutId }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "={{ $json.checkoutId }}"
+            },
+            {
+              "id": "0ffb202a-e760-5dba-b220-936975dbe2df",
+              "leftValue": "={{ $('CigalPay Trigger').item.json.checkoutCurrency }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "={{ $json.currency }}"
+            },
+            {
+              "id": "88dcc6c7-3361-5af0-8f02-ad741c350b53",
+              "leftValue": "={{ Number($('CigalPay Trigger').item.json.checkoutAmount) }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "rightValue": "={{ $json.price }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "2fb52f54-abb2-5218-93dd-985ac4da7ee2",
+      "name": "Paid the checkout we created?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "cigalpay_orders"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "orderId",
+              "condition": "eq",
+              "keyValue": "={{ $('Find the order').item.json.orderId }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "delivered"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "orderId",
+              "displayName": "orderId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "product",
+              "displayName": "product",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "currency",
+              "displayName": "currency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "checkoutId",
+              "displayName": "checkoutId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "downloadUrl",
+              "displayName": "downloadUrl",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "2f5a538d-37ff-5c72-8310-59ce9d3e91ec",
+      "name": "Mark as delivered",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1100,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('Set your shop emails').item.json.fromEmail }}",
+        "toEmail": "={{ $('Find the order').item.json.email }}",
+        "subject": "=Your download: {{ $('Find the order').item.json.product }}",
+        "emailFormat": "text",
+        "text": "=Thank you for your order {{ $('Find the order').item.json.orderId }}.\n\nYour payment is confirmed. Download {{ $('Find the order').item.json.product }} here:\n{{ $('Find the order').item.json.downloadUrl }}\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "b2d6506b-62fc-5231-ba8f-41a6edbcef9a",
+      "name": "Email the download link",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1320,
+        420
+      ],
+      "webhookId": "1b28c8bf-0bdb-5eeb-a3c0-851e086a1b91"
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('Set your shop emails').item.json.fromEmail }}",
+        "toEmail": "={{ $('Set your shop emails').item.json.ownerEmail }}",
+        "subject": "=Check order {{ $('Find the order').item.json.orderId }}: payment doesn't match",
+        "emailFormat": "text",
+        "text": "=A paid notification arrived for order {{ $('Find the order').item.json.orderId }}, but it doesn't match the checkout this workflow created.\n\nExpected: {{ $('Find the order').item.json.price }} {{ $('Find the order').item.json.currency }}, checkout {{ $('Find the order').item.json.checkoutId }}\nReceived: {{ $('CigalPay Trigger').item.json.checkoutAmount }} {{ $('CigalPay Trigger').item.json.checkoutCurrency }}, checkout {{ $('CigalPay Trigger').item.json.checkoutId }}\nPayment ID: {{ $('CigalPay Trigger').item.json.id }}\n\nNothing was delivered. Check the payment in your CigalPay dashboard.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "eab19b8d-e960-5bff-a4fa-2cb8e4c975d6",
+      "name": "Alert the shop owner",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1100,
+        620
+      ],
+      "webhookId": "4d00ba80-24fc-5ccd-910b-19f022327a95"
+    },
+    {
+      "parameters": {
+        "content": "## Sell digital products for crypto with an n8n form\n\n### How it works\nA customer picks a product in the form and is sent to a CigalPay payment page, priced in USD or EUR. They pay in BTC, ETH, USDT or another coin. When CigalPay confirms the payment, the second part finds the order, checks it was paid in full for the checkout this workflow created, emails the download link once and marks the order as delivered. Anything that doesn't match is sent to you instead of being delivered.\n\n### Setup\n1. Install the community node **n8n-nodes-cigalpay** (Settings \u2192 Community Nodes, tested with 1.1.0). Unverified community nodes need self-hosted n8n.\n2. Create a CigalPay account and a **CigalPay API** credential: Account ID, API key and notification signing secret (dashboard \u2192 Settings \u2192 API credentials).\n3. Create a Data Table **cigalpay_orders** with the columns orderId, email, product, currency, checkoutId, downloadUrl, status (text) and price (number).\n4. Add an SMTP credential to both email nodes.\n5. Edit **Set your products and URLs** and **Set your shop emails**. The product names must match the form's dropdown.\n6. Activate the workflow, copy the **CigalPay Trigger** production URL into notificationUrl, then save.\n\n### Customization\nSend the order to your CRM, or deliver a licence key instead of a link.\n",
+        "height": 640,
+        "width": 500
+      },
+      "id": "e504ddd5-fe46-5898-be8b-87e45e8d161e",
+      "name": "Sticky Note main",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Take the order\nThe form creates a CigalPay checkout for the chosen product, saves the order as pending, and sends the customer to the payment page.",
+        "height": 330,
+        "width": 1300,
+        "color": 7
+      },
+      "id": "9a848f44-cf88-5368-898f-d2b25898c162",
+      "name": "Sticky Note order",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -160
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Deliver once paid\nOnly orders still pending are delivered, so the CONFIRMED and FINISHED notifications send one email. The checkout ID, currency and amount must match what was created.",
+        "height": 560,
+        "width": 1580,
+        "color": 7
+      },
+      "id": "e40d90db-de41-507c-be55-a3e40cbdd8ea",
+      "name": "Sticky Note deliver",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "Order form": {
+      "main": [
+        [
+          {
+            "node": "Set your products and URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your products and URLs": {
+      "main": [
+        [
+          {
+            "node": "Build the order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build the order": {
+      "main": [
+        [
+          {
+            "node": "Create the checkout",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create the checkout": {
+      "main": [
+        [
+          {
+            "node": "Save the order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save the order": {
+      "main": [
+        [
+          {
+            "node": "Go to the payment page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CigalPay Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set your shop emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your shop emails": {
+      "main": [
+        [
+          {
+            "node": "Find the order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find the order": {
+      "main": [
+        [
+          {
+            "node": "Order waiting for payment?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark as delivered": {
+      "main": [
+        [
+          {
+            "node": "Email the download link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Order waiting for payment?": {
+      "main": [
+        [
+          {
+            "node": "Paid the checkout we created?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already delivered or not our order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paid the checkout we created?": {
+      "main": [
+        [
+          {
+            "node": "Mark as delivered",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert the shop owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
