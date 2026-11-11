@@ -1,0 +1,668 @@
+{
+  "name": "Get paid in crypto for Invoice Ninja invoices with CigalPay",
+  "nodes": [
+    {
+      "parameters": {
+        "apiVersion": "v5",
+        "event": "create_invoice"
+      },
+      "id": "23fbbfc7-a9a1-55d3-bd86-49d94274491a",
+      "name": "New invoice",
+      "type": "n8n-nodes-base.invoiceNinjaTrigger",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "c0b8eb94-7373-5c00-b8cc-09f1c108c349"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1def747f-d807-5eb7-bd2b-185eb6a46419",
+              "name": "defaultCurrency",
+              "value": "USD",
+              "type": "string"
+            },
+            {
+              "id": "6544379c-3ab8-5f40-a9a0-dcef4cbeda63",
+              "name": "returnUrl",
+              "value": "https://example.com/thank-you",
+              "type": "string"
+            },
+            {
+              "id": "e5bdbf3a-2d72-52ae-bb56-11488c1de900",
+              "name": "notificationUrl",
+              "value": "PASTE_THE_CIGALPAY_TRIGGER_PRODUCTION_URL",
+              "type": "string"
+            },
+            {
+              "id": "014e4c5f-2e17-5c23-a552-96408b7a923d",
+              "name": "fromEmail",
+              "value": "Your Name <billing@example.com>",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6bc22cbe-a669-56e0-bf99-ca89e8db7e43",
+      "name": "Set your settings",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "apiVersion": "v5",
+        "resource": "client",
+        "operation": "get",
+        "clientId": "={{ $('New invoice').item.json.client_id }}",
+        "options": {}
+      },
+      "id": "6b691018-8606-593e-9ecd-5d98370705e1",
+      "name": "Get the client",
+      "type": "n8n-nodes-base.invoiceNinja",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3e95217e-be5d-56e4-b62e-d8ae6ee21c5a",
+              "name": "invoiceId",
+              "value": "={{ $('New invoice').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "164d6a72-39ea-5d2a-8c45-eed0f8d8a57d",
+              "name": "invoiceNumber",
+              "value": "={{ $('New invoice').item.json.number }}",
+              "type": "string"
+            },
+            {
+              "id": "f57d702e-3a3f-58b1-a0d3-309567996283",
+              "name": "amount",
+              "value": "={{ Number($('New invoice').item.json.balance) > 0 ? Number($('New invoice').item.json.balance) : Number($('New invoice').item.json.amount) }}",
+              "type": "number"
+            },
+            {
+              "id": "bc8bd368-cfcc-51cb-8056-7e788be21442",
+              "name": "currency",
+              "value": "={{ ({ '1': 'USD', '3': 'EUR' })[String($json.settings?.currency_id ?? '')] ?? $('Set your settings').item.json.defaultCurrency }}",
+              "type": "string"
+            },
+            {
+              "id": "38f8533e-41eb-5bd8-9de3-bfd17b42b2e3",
+              "name": "email",
+              "value": "={{ ($json.contacts ?? []).find(c => c.email)?.email ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "da1775de-5eb4-5789-bd74-ab7f02bdf45a",
+              "name": "firstName",
+              "value": "={{ ($json.contacts ?? []).find(c => c.email)?.first_name ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4837cef4-1590-5610-a40c-2ce5cb00c473",
+      "name": "Prepare the payment",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "2d8ae1a7-956d-5853-a72c-54c56e33e4f5",
+              "leftValue": "={{ $json.amount }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            },
+            {
+              "id": "fe9574c3-7cff-5e27-a569-3d87fe1adb40",
+              "leftValue": "={{ $json.amount }}",
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              },
+              "rightValue": 5000
+            },
+            {
+              "id": "6fe183bc-789e-5f03-a1bb-d1c53f47d29e",
+              "leftValue": "={{ ['USD', 'EUR'].includes($json.currency) }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "3fa8a919-d680-55c7-a091-893d0768e7d8",
+              "leftValue": "={{ $json.email }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "0070a67f-4fcf-5157-9b0c-c85eca2665b8",
+      "name": "Can be paid in crypto?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7ba8f6bf-b50f-5243-8e85-f1d8ef69de62",
+      "name": "Skipped: nothing to pay, other currency, no email or above 5,000",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "checkout",
+        "operation": "create",
+        "amount": "={{ $json.amount }}",
+        "currency": "={{ $json.currency }}",
+        "orderId": "={{ $json.invoiceId }}",
+        "checkoutDescription": "=Invoice {{ $json.invoiceNumber }}",
+        "returnUrl": "={{ $('Set your settings').item.json.returnUrl }}",
+        "notifyUrl": "={{ $('Set your settings').item.json.notificationUrl }}",
+        "lang": "en"
+      },
+      "id": "a3f56750-8d7e-59ee-875f-13029923f832",
+      "name": "Create the checkout",
+      "type": "n8n-nodes-cigalpay.cigalPay",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('Set your settings').item.json.fromEmail }}",
+        "toEmail": "={{ $('Prepare the payment').item.json.email }}",
+        "subject": "=Pay invoice {{ $('Prepare the payment').item.json.invoiceNumber }} in crypto",
+        "emailFormat": "text",
+        "text": "=Hello {{ $('Prepare the payment').item.json.firstName }},\n\nYou can pay invoice {{ $('Prepare the payment').item.json.invoiceNumber }} ({{ $('Prepare the payment').item.json.amount }} {{ $('Prepare the payment').item.json.currency }}) in Bitcoin, USDT, Ethereum, Solana and more:\n{{ $json.chargeLink }}\n\nChoose your coin on the page and send the exact amount shown. The invoice is marked paid automatically once the payment is confirmed.\n",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "80d5992d-7c83-5b8c-8f98-d084736ad84b",
+      "name": "Email the payment link",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1320,
+        -100
+      ],
+      "webhookId": "5eb7b870-e5a9-505f-a1a4-d38bc39ed345"
+    },
+    {
+      "parameters": {
+        "statuses": "paid",
+        "ignoreTests": true
+      },
+      "id": "f5c850e9-f351-57b9-9eab-2eb9c90aebed",
+      "name": "CigalPay Trigger",
+      "type": "n8n-nodes-cigalpay.cigalPayTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        660
+      ],
+      "webhookId": "d5d31d7f-fd06-5579-a266-c72110825a1a"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "014e4c5f-2e17-5c23-a552-96408b7a923d",
+              "name": "fromEmail",
+              "value": "Your Name <billing@example.com>",
+              "type": "string"
+            },
+            {
+              "id": "43951b4c-f908-5cde-b9e7-47e800d044f7",
+              "name": "ownerEmail",
+              "value": "you@example.com",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "cd6216d9-ff6f-5b30-ba1f-c83ef90a1b18",
+      "name": "Set your email",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "apiVersion": "v5",
+        "resource": "invoice",
+        "operation": "get",
+        "invoiceId": "={{ $('CigalPay Trigger').item.json.extraId }}",
+        "options": {}
+      },
+      "id": "26248448-7415-51ad-8ce1-baa69b31eee6",
+      "name": "Get the invoice",
+      "type": "n8n-nodes-base.invoiceNinja",
+      "typeVersion": 2,
+      "position": [
+        440,
+        660
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "551adb75-0bc3-5654-9a42-baf907569d3d",
+              "leftValue": "={{ Number($json.balance) }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "067bf92a-294b-52c1-a0b9-de9acf4728ce",
+      "name": "Still unpaid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        660
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "4826cfed-cec6-5563-93c2-a1cf080d1d6a",
+      "name": "Already paid",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        880,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "apiVersion": "v5",
+        "resource": "client",
+        "operation": "get",
+        "clientId": "={{ $('Get the invoice').item.json.client_id }}",
+        "options": {}
+      },
+      "id": "74e97ebd-a3c3-543a-a928-4d33be0a1744",
+      "name": "Get the invoice client",
+      "type": "n8n-nodes-base.invoiceNinja",
+      "typeVersion": 2,
+      "position": [
+        880,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6fe183bc-789e-5f03-a1bb-d1c53f47d29e",
+              "leftValue": "={{ $('CigalPay Trigger').item.json.checkoutCurrency }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "={{ ({ '1': 'USD', '3': 'EUR' })[String($json.settings?.currency_id ?? '')] ?? '' }}"
+            },
+            {
+              "id": "f622032a-111b-5a37-986e-046bbce81454",
+              "leftValue": "={{ Number($('CigalPay Trigger').item.json.checkoutAmount) + 0.01 }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              },
+              "rightValue": "={{ Number($('Get the invoice').item.json.balance) }}"
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "c5a949ac-0b6c-52b3-b584-697f694dd567",
+      "name": "Paid in full, in the invoice currency?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "apiVersion": "v5",
+        "resource": "payment",
+        "operation": "create",
+        "invoice": "={{ $('Get the invoice').item.json.id }}",
+        "amount": "={{ Number($('Get the invoice').item.json.balance) }}",
+        "additionalFields": {
+          "transferReference": "=CigalPay {{ $('CigalPay Trigger').item.json.id }}",
+          "privateNotes": "=Paid {{ $('CigalPay Trigger').item.json.amount }} {{ $('CigalPay Trigger').item.json.currency }} with CigalPay (payment {{ $('CigalPay Trigger').item.json.id }})."
+        }
+      },
+      "id": "b003da84-b2ef-5a00-b932-907dc090cab2",
+      "name": "Record the payment",
+      "type": "n8n-nodes-base.invoiceNinja",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $('Set your email').item.json.fromEmail }}",
+        "toEmail": "={{ $('Set your email').item.json.ownerEmail }}",
+        "subject": "=Check invoice {{ $('Get the invoice').item.json.number }}: crypto payment doesn't match",
+        "emailFormat": "text",
+        "text": "=A crypto payment arrived for invoice {{ $('Get the invoice').item.json.number }}, but it doesn't cover the balance in the invoice currency.\n\nInvoice balance: {{ $('Get the invoice').item.json.balance }}\nPaid: {{ $('CigalPay Trigger').item.json.checkoutAmount }} {{ $('CigalPay Trigger').item.json.checkoutCurrency }} ({{ $('CigalPay Trigger').item.json.amount }} {{ $('CigalPay Trigger').item.json.currency }})\nCigalPay payment: {{ $('CigalPay Trigger').item.json.id }}\n\nNothing was recorded on the invoice. Check the payment in your CigalPay dashboard.",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "45443fbf-8548-536d-b47b-83836e369d63",
+      "name": "Alert the owner",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1320,
+        760
+      ],
+      "webhookId": "ef9f0c93-65e4-5199-afc8-15547e69b9b3"
+    },
+    {
+      "parameters": {
+        "content": "## Get paid in crypto for Invoice Ninja invoices\n\n### How it works\nWhen you create an invoice in Invoice Ninja, this workflow creates a CigalPay checkout for the amount due and emails your client a payment link. They pay in Bitcoin, USDT, Ethereum, Solana or another coin. When CigalPay confirms the payment, the second part checks it covers the balance in the invoice currency and records the payment in Invoice Ninja, which marks the invoice paid. Anything that doesn't match is emailed to you instead.\n\n### Setup\n1. Install the community node **n8n-nodes-cigalpay** (Settings \u2192 Community Nodes, tested with 1.1.0). Unverified community nodes need self-hosted n8n.\n2. Create an **Invoice Ninja** credential (v5: your Invoice Ninja URL and an API token from Settings \u2192 Account Management \u2192 API Tokens) and a **CigalPay API** credential (CigalPay dashboard \u2192 Settings \u2192 API credentials).\n3. Add an SMTP credential to both email nodes.\n4. Edit **Set your settings** and **Set your email**. Clients must be invoiced in USD or EUR; invoices up to 5,000 are offered.\n5. Activate the workflow, copy the **CigalPay Trigger** production URL into notificationUrl, then save.\n\n### Customization\nSend the link by SMS or chat instead of email, or only for invoices above an amount.\n",
+        "height": 680,
+        "width": 500
+      },
+      "id": "233c09e4-4032-59b9-8654-4cfdf865f7bf",
+      "name": "Sticky Note main",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Send the payment link\nA new invoice gets a CigalPay checkout for the amount due, in the client's currency, and the client gets the link by email.",
+        "height": 520,
+        "width": 1560,
+        "color": 7
+      },
+      "id": "f4fc609f-315b-58f2-8af4-e3148da57c86",
+      "name": "Sticky Note send",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        -220
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Record the payment\nOnly an unpaid invoice is updated, so the CONFIRMED and FINISHED notifications record one payment. The paid amount must cover the balance in the invoice currency.",
+        "height": 640,
+        "width": 1560,
+        "color": 7
+      },
+      "id": "2efab85e-0054-5ef6-85c7-9aa3f457c50c",
+      "name": "Sticky Note record",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -40,
+        380
+      ]
+    }
+  ],
+  "connections": {
+    "New invoice": {
+      "main": [
+        [
+          {
+            "node": "Set your settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your settings": {
+      "main": [
+        [
+          {
+            "node": "Get the client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the client": {
+      "main": [
+        [
+          {
+            "node": "Prepare the payment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare the payment": {
+      "main": [
+        [
+          {
+            "node": "Can be paid in crypto?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create the checkout": {
+      "main": [
+        [
+          {
+            "node": "Email the payment link",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CigalPay Trigger": {
+      "main": [
+        [
+          {
+            "node": "Set your email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set your email": {
+      "main": [
+        [
+          {
+            "node": "Get the invoice",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the invoice": {
+      "main": [
+        [
+          {
+            "node": "Still unpaid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the invoice client": {
+      "main": [
+        [
+          {
+            "node": "Paid in full, in the invoice currency?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Can be paid in crypto?": {
+      "main": [
+        [
+          {
+            "node": "Create the checkout",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skipped: nothing to pay, other currency, no email or above 5,000",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Still unpaid?": {
+      "main": [
+        [
+          {
+            "node": "Get the invoice client",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Already paid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Paid in full, in the invoice currency?": {
+      "main": [
+        [
+          {
+            "node": "Record the payment",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Alert the owner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}

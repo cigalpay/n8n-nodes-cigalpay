@@ -62,6 +62,15 @@ Anyone can create a checkout with your Account ID and an order reference. Before
 
 Setup steps are in the yellow note on the canvas.
 
+## Example workflow: get paid in crypto for Invoice Ninja invoices
+
+[`examples/invoice-ninja-crypto.json`](examples/invoice-ninja-crypto.json)
+
+![Invoice Ninja invoices paid in crypto](examples/invoice-ninja-crypto.png)
+
+1. **Send the payment link:** when you create an invoice in Invoice Ninja, the workflow creates a CigalPay checkout for the amount due, in the client's currency, and emails the client the link.
+2. **Record the payment:** once CigalPay confirms it, the workflow checks the invoice is still unpaid and the payment covers the balance in the invoice currency, then records the payment in Invoice Ninja. Anything else is emailed to you.
+
 ## Limits
 
 - 5,000 USD or EUR per payment.
