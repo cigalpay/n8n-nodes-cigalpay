@@ -47,13 +47,6 @@ export class CigalPayTrigger implements INodeType {
 		],
 		properties: [
 			{
-				displayName:
-					'Use this node\'s production URL as the "Notification URL" when you create a checkout (CigalPay node or API). CigalPay sends the notification to that URL each time the payment\'s status changes.',
-				name: 'notice',
-				type: 'notice',
-				default: '',
-			},
-			{
 				displayName: 'Trigger On',
 				name: 'statuses',
 				type: 'options',
@@ -63,6 +56,8 @@ export class CigalPayTrigger implements INodeType {
 					{ name: 'Selected Statuses', value: 'selected' },
 				],
 				default: 'paid',
+				description:
+					'Which notifications start the workflow. CigalPay sends them to the Notification URL of each checkout: use this node\'s production URL there (CigalPay node or API).',
 			},
 			{
 				displayName: 'Statuses',

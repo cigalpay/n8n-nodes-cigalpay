@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+- Node metadata files use the full node identifiers (`n8n-nodes-cigalpay.cigalPay`, `n8n-nodes-cigalpay.cigalPayTrigger`).
+- Trigger: the setup notice is gone; the "Trigger On" field description and the README explain the Notification URL.
+
 ## 1.1.0
 - Ready for n8n verification: built and linted with n8n's official node CLI (`n8n-node build` / `n8n-node lint`), SVG icons with light and dark variants, node metadata files (Finance & Accounting).
 - Options listed alphabetically.

@@ -1,5 +1,5 @@
 {
-	"node": "n8n-nodes-cigalpay",
+	"node": "n8n-nodes-cigalpay.cigalPayTrigger",
 	"nodeVersion": "1.0",
 	"codexVersion": "1.0",
 	"categories": ["Finance & Accounting"],
