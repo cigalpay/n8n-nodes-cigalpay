@@ -42,7 +42,7 @@
             {
               "id": "014e4c5f-2e17-5c23-a552-96408b7a923d",
               "name": "fromEmail",
-              "value": "Your Name <billing@example.com>",
+              "value": "REPLACE_WITH_YOUR_SENDER_ADDRESS",
               "type": "string"
             }
           ]
@@ -267,13 +267,13 @@
             {
               "id": "014e4c5f-2e17-5c23-a552-96408b7a923d",
               "name": "fromEmail",
-              "value": "Your Name <billing@example.com>",
+              "value": "REPLACE_WITH_YOUR_SENDER_ADDRESS",
               "type": "string"
             },
             {
               "id": "43951b4c-f908-5cde-b9e7-47e800d044f7",
               "name": "ownerEmail",
-              "value": "you@example.com",
+              "value": "REPLACE_WITH_YOUR_EMAIL",
               "type": "string"
             }
           ]

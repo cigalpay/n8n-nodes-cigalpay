@@ -10,7 +10,7 @@
             {
               "fieldLabel": "Email",
               "fieldType": "email",
-              "placeholder": "you@example.com",
+              "placeholder": "Your email address",
               "requiredField": true
             },
             {
@@ -327,13 +327,13 @@
             {
               "id": "b3c80611-16b4-52ed-a4e9-dd7c94230082",
               "name": "fromEmail",
-              "value": "Your Shop <shop@example.com>",
+              "value": "REPLACE_WITH_YOUR_SENDER_ADDRESS",
               "type": "string"
             },
             {
               "id": "5b037acf-4ca1-554c-8e82-e795087fcd2b",
               "name": "ownerEmail",
-              "value": "you@example.com",
+              "value": "REPLACE_WITH_YOUR_EMAIL",
               "type": "string"
             }
           ]
